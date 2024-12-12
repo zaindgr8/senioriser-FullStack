@@ -1,0 +1,256 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  COMMUNITY_MEMBER
+  AGENT
+}
+model SponsorConnectionRequest {
+  id          Int      @id @default(autoincrement())
+  sponsorId   Int      // The user sending the sponsorship
+  receiverId  Int      // The user receiving the sponsorship
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sponsor     Userauth @relation("SentSponsorships", fields: [sponsorId], references: [id])
+  receiver    Userauth @relation("ReceivedSponsorships", fields: [receiverId], references: [id])
+}
+model Userauth {
+  id           Int          @id @default(autoincrement())
+  fullName     String
+  email        String       @unique
+  password     String?
+  userType     UserType
+  UserProfile  UserProfile[]
+  sentConnections AgentConnectionRequest[] @relation("UserSenderRelation")
+  receivedConnections AgentConnectionRequest[] @relation("UserReceiverRelation")
+  agentBusinessInfos  AgentBusinessinfo[]
+  communityBusinessinfos  CommunityBusinessinfo[]
+   comsentConnections     CommunityConnectionRequest[] @relation("CommunitySenderRelation")
+  comreceivedConnections CommunityConnectionRequest[] @relation("CommunityReceiverRelation")
+
+   sentSponsorships      SponsorConnectionRequest[] @relation("SentSponsorships")
+  receivedSponsorships  SponsorConnectionRequest[] @relation("ReceivedSponsorships")
+}
+
+model CommunityBusinessinfo {
+  id                  Int                     @id @default(autoincrement())
+  CommunityName       String
+  address             String
+  communityType       String[]
+  businessDetails     CommunityBusinessDetails[]
+  amenities           CommunityAmenities[]
+  specialties         CommunitySpecialties[]
+  pricing             CommunityPricing[]
+  propertyImages      PropertyImages[]
+   userauth             Userauth               @relation(fields: [userauthId], references: [id])
+  userauthId           Int   
+ 
+}
+
+model UserProfile {
+  id                   Int          @id @default(autoincrement())
+  jobTitle             String?
+  startedInIndustry    DateTime?
+  aboutYou             String?
+  education            String?
+  fullName             String?
+  profilePhoto         String?
+  certificatesAndAwards String[]    @default([])
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  User                 Userauth     @relation(fields: [UserauthId], references: [id])
+  UserauthId           Int
+}
+
+model CommunityBusinessDetails {
+  id              Int                    @id @default(autoincrement())
+  dba             String?
+  yearFounded     String?
+  license         String?
+  country         String?
+  city            String?
+  state           String?
+  zip             String?
+  website         String?
+  units           String?
+  image           String?
+  primaryPhone    String?
+  ext             String?
+  cellPhone       String?
+  link1           String?
+  link2           String?
+  link3           String?
+   link4           String?
+  fax             String?
+  Corporation     String[]
+  Status          String[]
+  companyOverview String?
+  businessInfo    CommunityBusinessinfo  @relation(fields: [businessInfoId], references: [id])
+  businessInfoId  Int
+}
+
+model PropertyImages {
+  id             Int                   @id @default(autoincrement())
+  image          String[]
+  businessInfo   CommunityBusinessinfo @relation(fields: [businessInfoId], references: [id])
+  businessInfoId Int
+}
+
+model CommunitySpecialties {
+  id             Int                   @id @default(autoincrement())
+  specialties    String[]
+  businessInfo   CommunityBusinessinfo @relation(fields: [businessInfoId], references: [id])
+  businessInfoId Int
+}
+
+model CommunityAmenities {
+  id             Int                   @id @default(autoincrement())
+  amenities      String[]
+  businessInfo   CommunityBusinessinfo @relation(fields: [businessInfoId], references: [id])
+  businessInfoId Int
+}
+
+model CommunityPricing {
+  id             Int                   @id @default(autoincrement())
+  pricing        String[]
+  payments       String[]
+  businessInfo   CommunityBusinessinfo @relation(fields: [businessInfoId], references: [id])
+  businessInfoId Int
+}
+
+model AgentBusinessinfo {
+  id                   Int                    @id @default(autoincrement())
+  agentName            String
+  address              String
+  businessType         String
+  services             String[]               // Array of services
+  agentBusiness        AgentBusinessDetails[]
+  images               AgentImage[]
+  insurance   InsuranceOptions[]
+  paymentOptions   PaymentOptions[]
+  userauth             Userauth               @relation(fields: [userauthId], references: [id])
+  userauthId           Int                    // Foreign key referencing Userauth
+}
+
+model AgentBusinessDetails {
+  id                   Int                    @id @default(autoincrement())
+  dba                  String?
+  yearFounded          String?
+  license              String?
+  country              String?
+  city                 String?
+  state                String?
+  zip                  String?
+  website              String?
+   link1           String?
+  link2           String?
+  link3           String?
+   link4           String?
+  image                String?
+  primaryPhone         String?
+  ext                  String?
+  cellPhone            String?
+  fax                  String?
+  Corporation          String[]
+  Status               String[]
+  companyOverview      String?
+  agentbusinessInfo    AgentBusinessinfo      @relation(fields: [agentbusinessInfoId], references: [id])
+  agentbusinessInfoId  Int
+  userauthId           Int?
+}
+
+
+model AgentImage {
+  id                   Int                    @id @default(autoincrement())
+  image                String[]
+  agentbusinessInfo    AgentBusinessinfo      @relation(fields: [agentbusinessInfoId], references: [id])
+  agentbusinessInfoId  Int                    // Foreign key referencing AgentBusinessinfo
+}
+model InsuranceOptions {
+  id                   Int       @id @default(autoincrement())
+  allInsurance         Boolean?   @default(false)
+  dentalInsurance      Boolean?  @default(false)
+  longTermInsurance    Boolean?  @default(false)
+  medicaid             Boolean?   @default(false)
+  medicaidManaged      Boolean?   @default(false)
+  medicare             Boolean?   @default(false)
+  supplemental         Boolean?   @default(false)
+  visionInsurance      Boolean?   @default(false)
+  workersComp          Boolean?   @default(false)
+agentbusinessInfo    AgentBusinessinfo      @relation(fields: [agentbusinessInfoId], references: [id])
+  agentbusinessInfoId  Int   
+}
+model PaymentOptions {
+  id                   Int       @id @default(autoincrement())
+  visa                 Boolean   @default(false)
+  mastercard           Boolean   @default(false)
+  amex                 Boolean   @default(false)
+  discover             Boolean   @default(false)
+  paypal               Boolean   @default(false)
+  applepay             Boolean   @default(false)
+  skrill               Boolean   @default(false)
+  venmo                Boolean   @default(false)
+  googlepay            Boolean   @default(false)
+  cash                 Boolean   @default(false)
+  checks               Boolean   @default(false)
+  moneyorder           Boolean   @default(false)
+  agentBusinessInfo    AgentBusinessinfo? @relation(fields: [agentBusinessInfoId], references: [id])
+  agentBusinessInfoId  Int?
+}
+model AgentConnectionRequest {
+  id          Int               @id @default(autoincrement())
+  senderId    Int
+  receiverId  Int
+  status      String            // 'PENDING', 'ACCEPTED', 'DECLINED'
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  sender      Userauth          @relation("UserSenderRelation", fields: [senderId], references: [id])
+  receiver    Userauth          @relation("UserReceiverRelation", fields: [receiverId], references: [id])
+}
+
+model CommunityConnectionRequest {
+  id          Int                    @id @default(autoincrement())
+  senderId    Int
+  receiverId  Int
+  status      String                 // 'PENDING', 'ACCEPTED', 'DECLINED'
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  sender      Userauth          @relation("CommunitySenderRelation", fields: [senderId], references: [id])
+  receiver    Userauth          @relation("CommunityReceiverRelation", fields: [receiverId], references: [id])
+}
+
+model Event {
+  id           String   @id @default(uuid())
+  eventName    String
+  eventDate    DateTime
+  startTime    String
+  endTime      String
+  repeatEvent  String
+  eventDetails String?
+  eventUrl     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Incentive {
+  id              Int      @id @default(autoincrement())
+  incentiveName   String
+  startDate       DateTime
+  endDate         DateTime
+  valueOfIncentive Float
+  inPercent       Boolean
+  description     String?
+  legalDisclaimer String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
